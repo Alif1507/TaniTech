@@ -49,7 +49,7 @@ export default function Navbar() {
             }}
           />
           <span className="font-display font-black text-2xl tracking-tight text-primary-green flex items-center gap-1">
-            Tani<span className="text-secondary-green">Tech</span>
+            AGRI<span className="text-secondary-green">VO</span>
           </span>
         </Link>
 

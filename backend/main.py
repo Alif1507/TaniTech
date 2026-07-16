@@ -5,8 +5,8 @@ from routers.content import ensure_initial_content
 from config import logger, settings
 
 app = FastAPI(
-    title="TaniTech Backend API",
-    description="REST API for TaniTech - AI & IoT-based agriculture platform & marketplace",
+    title="Agrivo Backend API",
+    description="REST API for Agrivo - AI & IoT-based agriculture platform & marketplace",
     version="1.0"
 )
 
@@ -28,14 +28,14 @@ app.include_router(content.router)
 
 @app.on_event("startup")
 def startup_event():
-    logger.info("TaniTech Backend is starting up...")
+    logger.info("Agrivo Backend is starting up...")
     # Pre-populate static content (articles, faqs, categories) on boot
     ensure_initial_content()
 
 @app.get("/")
 def read_root():
     return {
-        "app": "TaniTech Backend API",
+        "app": "Agrivo Backend API",
         "version": "1.0",
         "documentation": "/docs",
         "status": "healthy"
