@@ -72,7 +72,7 @@ export default function Navbar() {
           {session ? (
             <div className="flex items-center gap-4">
               {/* User badge */}
-              <div className="flex items-center gap-2 bg-neutral-50 px-3.5 py-2 rounded-2xl border border-neutral-100">
+              <Link to="/dashboard" className="flex items-center gap-2 bg-neutral-50 px-3.5 py-2 rounded-2xl border border-neutral-100 hover:bg-neutral-100 hover:border-primary-green/30 transition-all cursor-pointer">
                 <div className="w-8 h-8 rounded-full bg-primary-green/10 flex items-center justify-center font-bold text-primary-green text-sm">
                   {session.profile.full_name ? session.profile.full_name[0].toUpperCase() : "U"}
                 </div>
@@ -80,7 +80,7 @@ export default function Navbar() {
                   <div className="text-xs font-semibold text-neutral-400 capitalize">{session.profile.role}</div>
                   <div className="text-sm font-bold text-neutral-800 leading-tight">{session.profile.full_name}</div>
                 </div>
-              </div>
+              </Link>
               
               {/* Logout Button */}
               <button
@@ -162,7 +162,7 @@ export default function Navbar() {
           <div className="mt-3 flex flex-col gap-3 border-t border-neutral-100 pt-4">
             {session ? (
               <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-3 px-3 py-2">
+                <Link to="/dashboard" onClick={() => setIsOpen(false)} className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-neutral-50 transition-all">
                   <div className="w-10 h-10 rounded-full bg-primary-green/10 flex items-center justify-center font-bold text-primary-green text-base">
                     {session.profile.full_name ? session.profile.full_name[0].toUpperCase() : "U"}
                   </div>
@@ -170,7 +170,7 @@ export default function Navbar() {
                     <div className="text-sm font-bold text-neutral-800">{session.profile.full_name}</div>
                     <div className="text-xs font-semibold text-neutral-400 capitalize">{session.profile.role}</div>
                   </div>
-                </div>
+                </Link>
 
                 <button
                   onClick={handleLogout}

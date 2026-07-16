@@ -1,5 +1,4 @@
 from supabase import create_client, Client
-from supabase.lib.client_options import ClientOptions
 from config import settings, logger
 from typing import Optional
 
@@ -15,15 +14,14 @@ def get_supabase_client(token: Optional[str] = None) -> Client:
     if not url or not key:
         logger.error("SUPABASE_URL or SUPABASE_ANON_KEY is missing in settings!")
         raise ValueError("Supabase configuration is missing.")
-        
+    
+    client = create_client(url, key)
+    
     if token:
-        # Create client with custom Authorization header containing user JWT
-        options = ClientOptions(
-            headers={"Authorization": f"Bearer {token}"}
-        )
-        return create_client(url, key, options=options)
-    else:
-        return create_client(url, key)
+        # Inject the user JWT into the postgrest client for RLS enforcement
+        client.postgrest.auth(token)
+    
+    return client
 
 def get_admin_client() -> Client:
     """

@@ -66,22 +66,20 @@ def register(req: RegisterRequest):
     elif wa.startswith("08"):
         wa = "628" + wa[2:]
 
-    client = get_supabase_client()
+    admin_client = get_admin_client()
     try:
-        # Register user with Supabase Auth
-        signup_options = {
-            "data": {
+        # Register user directly with admin client to auto-confirm email and bypass rate limits
+        auth_res = admin_client.auth.admin.create_user({
+            "email": req.email,
+            "password": req.password,
+            "email_confirm": True,
+            "user_metadata": {
                 "full_name": req.full_name,
                 "phone": req.phone,
                 "whatsapp_number": wa,
                 "role": req.role,
                 "avatar_url": req.avatar_url or ""
             }
-        }
-        auth_res = client.auth.sign_up({
-            "email": req.email,
-            "password": req.password,
-            "options": signup_options
         })
         
         if not auth_res or not auth_res.user:
@@ -90,16 +88,17 @@ def register(req: RegisterRequest):
                 detail="Registration failed. Check if email is already in use."
             )
             
+        user = auth_res.user
         # Return registered user profile
         return {
-            "id": auth_res.user.id,
-            "email": auth_res.user.email,
+            "id": user.id,
+            "email": user.email,
             "full_name": req.full_name,
             "phone": req.phone,
             "whatsapp_number": wa,
             "role": req.role,
             "avatar_url": req.avatar_url,
-            "created_at": auth_res.user.created_at
+            "created_at": user.created_at
         }
     except Exception as e:
         logger.error(f"Registration error: {e}")
