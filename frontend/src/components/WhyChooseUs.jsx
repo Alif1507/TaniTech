@@ -27,7 +27,7 @@ const CARDS = [
 
 export default function WhyChooseUs() {
   return (
-    <section id="kenapa" style={{ fontFamily: "Poppins, sans-serif" }} className="w-full bg-white mt-15 px-4 py-16 sm:px-8 lg:px-12">
+    <section id="kenapa" style={{ fontFamily: "Poppins, sans-serif" }} className="w-full mt-15 px-4 py-16 sm:px-8 lg:px-12">
         <div className="flex flex-col items-center justify-center text-center mb-10  gap-2">
             <h2 className="font-inter text-center text-[30px] font-semibold text-[#1F1B0E] sm:text-[38px]">
                 Kenapa memilih kami?
