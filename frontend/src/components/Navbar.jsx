@@ -1,14 +1,20 @@
 import { useState, useEffect } from "react";
+import { Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, LogOut, User, LayoutDashboard } from "lucide-react";
-import { getSession, clearSession } from "../utils/api";
+import { getSession } from "../utils/api";
 
 const NAV_LINKS = [
-  { label: "About", href: "/#about" },
-  { label: "Kenapa", href: "/#kenapa" },
-  { label: "Saran", href: "/#saran" },
-  { label: "Buat & Konsumen", href: "/#buat-konsumen" },
+  { label: "About", href: "#about" },
+  { label: "Kenapa", href: "#kenapa" },
+  { label: "Saran", href: "#saran" },
+  { label: "Buat & Konsumen", href: "#buat-konsumen" },
 ];
+
+const scrollToSection = (id) => {
+  document.getElementById(id)?.scrollIntoView({
+    behavior: "smooth",
+  });
+};
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -35,39 +41,29 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white/90 backdrop-blur-sm shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white/90 backdrop-blur-sm">
       <nav className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
-        {/* Logo / Brand */}
         <Link to="/" className="flex items-center gap-2 shrink-0">
           <img
             src="/img/Logo.png"
             alt="Benih - Rumah Bibit Berkualitas"
-            className="h-11 w-auto"
-            onError={(e) => {
-              // Fallback if image doesn't exist
-              e.target.style.display = "none";
-            }}
+            className="h-20 w-auto"
           />
-          <span className="font-display font-black text-2xl tracking-tight text-primary-green flex items-center gap-1">
-            AGRI<span className="text-secondary-green">VO</span>
-          </span>
         </Link>
 
-        {/* Desktop Nav Links */}
         <div className="hidden lg:flex items-center gap-9">
           {NAV_LINKS.map((link) => (
             <a
               key={link.label}
-              href={link.href}
-              className="group relative text-[15px] font-semibold text-neutral-600 transition-colors duration-200 hover:text-primary-green"
+              onClick={() => scrollToSection(link.href.replace("#", ""))}
+              className="group cursor-pointer relative text-[16px] font-medium transition-colors duration-200 hover:text-[#4C6B30]"
             >
               {link.label}
-              <span className="absolute -bottom-1 left-1/2 h-[2px] w-0 -translate-x-1/2 bg-primary-green transition-all duration-300 ease-out group-hover:w-full" />
+              <span className="absolute -bottom-1 left-1/2 h-[2px] w-0 -translate-x-1/2 bg-[#4C6B30] transition-all duration-300 ease-out group-hover:w-full" />
             </a>
           ))}
         </div>
 
-        {/* Desktop Authentication / User State */}
         <div className="hidden lg:flex items-center gap-3">
           {session ? (
             <div className="flex items-center gap-4">
@@ -109,7 +105,6 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Hamburger Menu Icon */}
         <button
           onClick={() => setIsOpen((prev) => !prev)}
           aria-label="Toggle menu"
@@ -129,7 +124,6 @@ export default function Navbar() {
         </button>
       </nav>
 
-      {/* Mobile Drawer Overlay */}
       <div
         className={`fixed inset-0 top-20 z-40 bg-black/30 backdrop-blur-[2px] transition-opacity duration-300 lg:hidden ${
           isOpen ? "opacity-100" : "pointer-events-none opacity-0"
@@ -137,7 +131,6 @@ export default function Navbar() {
         onClick={() => setIsOpen(false)}
       />
 
-      {/* Mobile Drawer */}
       <div
         className={`fixed inset-x-0 top-20 z-40 origin-top overflow-hidden bg-white shadow-xl transition-all duration-300 ease-out lg:hidden ${
           isOpen ? "max-h-[32rem] opacity-100" : "max-h-0 opacity-0"
@@ -158,7 +151,6 @@ export default function Navbar() {
             </a>
           ))}
 
-          {/* Mobile Auth / Session section */}
           <div className="mt-3 flex flex-col gap-3 border-t border-neutral-100 pt-4">
             {session ? (
               <div className="flex flex-col gap-3">
