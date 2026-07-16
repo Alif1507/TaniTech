@@ -1,1 +1,59 @@
 @import "tailwindcss";
+
+@theme {
+  --color-primary-green: #5E8000;
+  --color-secondary-green: #A1C942;
+  --color-accent-amber: #FFC000;
+  --color-gold-metallic: #D4AF37;
+  --color-old-gold: #E1C055;
+  
+  --font-display: "Outfit", sans-serif;
+  --font-body: "Inter", sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: #f7f9f4;
+    color: #1c2412;
+    font-family: var(--font-body);
+  }
+}
+
+/* Custom background pattern */
+.grid-bg {
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(94, 128, 0, 0.05) 1px, transparent 0),
+    radial-gradient(circle at 1px 1px, rgba(94, 128, 0, 0.03) 1px, transparent 0);
+  background-size: 24px 24px, 12px 12px;
+}
+
+/* Custom transitions and scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f7f9f4;
+}
+::-webkit-scrollbar-thumb {
+  background: #5E8000;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A1C942;
+}
+
+/* Fade-in animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
