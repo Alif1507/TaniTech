@@ -320,4 +320,18 @@ export async function cancelPost(postId, token) {
   return data;
 }
 
-
+export async function updateProfile(payload, token) {
+  const response = await fetch(`${API_BASE_URL}/api/auth/me/profile`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.detail || "Gagal memperbarui profil.");
+  }
+  return data;
+}

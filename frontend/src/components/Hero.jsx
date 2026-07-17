@@ -51,7 +51,7 @@ export default function HeroSection() {
         <div className="hidden absolute right-0 -bottom-16 md:flex h-full items-end shrink-0 self-end">
           <img
             src="/img/orang.png"
-            alt="Petani memegang smartphone menampilkan aplikasi Agrivo"
+            alt=""
             className="max-h-full w-auto object-contain object-bottom"
           />
         </div>
