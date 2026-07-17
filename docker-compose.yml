@@ -1,0 +1,44 @@
+services:
+
+  # ── FastAPI Backend ─────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: agrivo_backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      # These can be overridden here or via ./backend/.env
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GROQ_DEFAULT_MODEL=${GROQ_DEFAULT_MODEL:-openai/gpt-oss-20b}
+      - GROQ_REASONING_MODEL=${GROQ_REASONING_MODEL:-qwen/qwen3.6-27b}
+      - INTERNAL_CRON_SECRET=${INTERNAL_CRON_SECRET:-super_secret_cron_key}
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── React Frontend (Nginx) ───────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Bakes the API URL into the static build
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+    container_name: agrivo_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
