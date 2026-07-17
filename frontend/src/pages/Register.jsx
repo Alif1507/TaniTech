@@ -35,7 +35,6 @@ export default function Register() {
     <div className="min-h-screen bg-[#f6f7f3] flex items-center justify-center p-4 py-10">
       <div className="w-full max-w-sm">
 
-        {/* Brand */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-block">
             <span className="font-display font-black text-3xl text-[#5E8000]">
@@ -45,17 +44,14 @@ export default function Register() {
           <p className="mt-2 text-sm text-neutral-500">Buat akun baru</p>
         </div>
 
-        {/* Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-8">
 
-          {/* Error */}
           {error && (
             <div className="mb-5 px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-700 font-medium">
               {error}
             </div>
           )}
 
-          {/* Success */}
           {success && (
             <div className="mb-5 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-100 text-sm text-emerald-700 font-medium">
               Akun berhasil dibuat! Mengalihkan ke login...
@@ -64,10 +60,9 @@ export default function Register() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
 
-            {/* Role Selector */}
             <div>
               <label className="block text-sm font-semibold text-neutral-700 mb-2">Daftar sebagai</label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setRole("petani")}
@@ -95,7 +90,6 @@ export default function Register() {
               </div>
             </div>
 
-            {/* Full Name */}
             <div>
               <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Nama Lengkap</label>
               <input
@@ -108,7 +102,6 @@ export default function Register() {
               />
             </div>
 
-            {/* Email */}
             <div>
               <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Email</label>
               <input
@@ -121,7 +114,6 @@ export default function Register() {
               />
             </div>
 
-            {/* WhatsApp / Phone */}
             <div>
               <label className="block text-sm font-semibold text-neutral-700 mb-1.5">No. WhatsApp</label>
               <input
@@ -134,7 +126,6 @@ export default function Register() {
               />
             </div>
 
-            {/* Password */}
             <div>
               <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Password</label>
               <div className="relative">
@@ -156,7 +147,6 @@ export default function Register() {
               </div>
             </div>
 
-            {/* Terms */}
             <div className="flex items-start gap-2.5">
               <input
                 id="terms"
@@ -173,7 +163,6 @@ export default function Register() {
               </label>
             </div>
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={loading || success}
@@ -188,7 +177,6 @@ export default function Register() {
           </form>
         </div>
 
-        {/* Footer link */}
         <p className="text-center mt-5 text-sm text-neutral-500">
           Sudah punya akun?{" "}
           <Link to="/login" className="font-bold text-[#5E8000] hover:underline">

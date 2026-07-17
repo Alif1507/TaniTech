@@ -30,7 +30,6 @@ export default function Login() {
     <div className="min-h-screen bg-[#f6f7f3] flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
 
-        {/* Brand */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-block">
             <span className="font-display font-black text-3xl text-[#5E8000]">
@@ -40,10 +39,7 @@ export default function Login() {
           <p className="mt-2 text-sm text-neutral-500">Masuk ke akun Anda</p>
         </div>
 
-        {/* Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-neutral-100 p-8">
-
-          {/* Error */}
           {error && (
             <div className="mb-5 px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-700 font-medium">
               {error}
@@ -102,7 +98,6 @@ export default function Login() {
           </form>
         </div>
 
-        {/* Footer link */}
         <p className="text-center mt-5 text-sm text-neutral-500">
           Belum punya akun?{" "}
           <Link to="/register" className="font-bold text-[#5E8000] hover:underline">
