@@ -51,7 +51,8 @@ import {
   updateTransactionStatus,
   submitReview,
   cancelPost,
-  fetchUserReviews
+  fetchUserReviews,
+  updateProfile
 } from "../utils/api";
 
 export default function Dashboard() {
@@ -112,6 +113,14 @@ export default function Dashboard() {
   const [reviewPayload, setReviewPayload] = useState({
     rating: 5,
     comment: ""
+  });
+
+  // Edit Profile state
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [editProfileForm, setEditProfileForm] = useState({
+    full_name: "",
+    phone: "",
+    whatsapp_number: ""
   });
 
   // AI Assistant States
@@ -556,10 +565,42 @@ export default function Dashboard() {
       const data = await simulateIoT(recId, session.token);
       setSimulationResult(data);
       setAiMode("simulate");
+      // Reload history to ensure it holds the new simulation result
+      loadAIData();
     } catch (err) {
       setError(err.message || "Gagal menjalankan simulasi digital twin.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Flatten previous recommendations from conversations
+  const allPreviousRecs = history.flatMap(conv => 
+    (conv.recommendations || []).map(rec => ({
+      ...rec,
+      conversation_id: conv.id,
+      input_mode: conv.input_mode,
+      komoditas: conv.komoditas,
+      luas_lahan_m2: conv.luas_lahan_m2,
+      lokasi: conv.lokasi,
+      kondisi_saat_ini: conv.kondisi_saat_ini,
+      budget: conv.budget,
+      created_at: conv.created_at
+    }))
+  ).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  const handleSelectHistoryRec = (rec) => {
+    setAiResult({
+      recommendation_id: rec.id,
+      solution_name: rec.solution_name,
+      description: rec.description,
+      estimated_cost: rec.estimated_cost,
+      components: rec.components || []
+    });
+    if (rec.simulation) {
+      setSimulationResult(rec.simulation);
+    } else {
+      setSimulationResult(null);
     }
   };
 
@@ -702,9 +743,15 @@ export default function Dashboard() {
           <div className="space-y-6 animate-fade-in">
             
             {/* Header Greeting */}
-            <h1 className="text-3xl font-extrabold font-body tracking-tight text-neutral-900 pb-2">
-              Hallo, {session.profile.full_name?.split(" ")[0]} 👋
-            </h1>
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-4">
+                <div className="w-1.5 h-14 bg-[#FFC000] rounded-full shrink-0 mt-1" />
+                <div>
+                  <h1 className="text-3xl font-extrabold text-neutral-800 leading-tight font-body">Hallo, {session.profile.full_name?.split(" ")[0]} 👋</h1>
+                  <p className="text-sm text-neutral-500 mt-1">Kelola informasi profil lengkap Anda di platform Agrivo</p>
+                </div>
+              </div>
+            </div>
 
             {/* Error / Success notifications */}
             {error && (
@@ -721,36 +768,52 @@ export default function Dashboard() {
             {/* Top Row: User Card & Data grid */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
               
-              {/* Profile Card Left */}
-              <div className="md:col-span-5 relative rounded-[32px] overflow-hidden shadow-md aspect-square md:aspect-auto min-h-[290px] w-full group">
-                <img
-                  src={session.profile.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80"}
-                  alt={session.profile.full_name}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent" />
-                
-                {/* Farmer Average Review Rating Badge */}
-                {session.profile.role === "petani" && (
-                  <div className="absolute top-4 left-4 z-10 px-3.5 py-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/10 text-white flex items-center gap-1.5 text-xs font-bold shadow-sm select-none">
-                    <Star className="w-3.5 h-3.5 text-[#FFC000] fill-[#FFC000]" />
-                    <span>
-                      {userReviews && userReviews.length > 0 
-                        ? (userReviews.reduce((sum, r) => sum + r.rating, 0) / userReviews.length).toFixed(1)
-                        : "0.0"
-                      }
-                      <span className="text-white/70 font-normal"> ({userReviews ? userReviews.length : 0} Ulasan)</span>
-                    </span>
+              {/* Profile Card Left — Letter Avatar */}
+              <div className="md:col-span-5 rounded-[32px] shadow-md min-h-[290px] w-full bg-gradient-to-br from-[#5E8000] to-[#A1C942] p-7 flex flex-col justify-between text-white">
+                {/* Top: role badge + rating */}
+                <div className="flex items-start justify-between">
+                  <span className="px-3.5 py-1.5 rounded-full bg-white/20 backdrop-blur-sm text-[11px] font-bold capitalize tracking-wider border border-white/20">
+                    {session.profile.role}
+                  </span>
+
+                  {session.profile.role === "petani" && (
+                    <div className="px-3.5 py-1.5 rounded-full bg-black/25 backdrop-blur-md border border-white/10 text-white flex items-center gap-1.5 text-xs font-bold shadow-sm select-none">
+                      <Star className="w-3.5 h-3.5 text-[#FFC000] fill-[#FFC000]" />
+                      <span>
+                        {userReviews && userReviews.length > 0
+                          ? (userReviews.reduce((sum, r) => sum + r.rating, 0) / userReviews.length).toFixed(1)
+                          : "0.0"}
+                        <span className="text-white/70 font-normal"> ({userReviews ? userReviews.length : 0})</span>
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Center: big letter circle */}
+                <div className="flex items-center justify-center flex-1 py-4">
+                  <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center text-5xl font-black text-white shadow-inner uppercase select-none">
+                    {session.profile.full_name?.[0] || "?"}
                   </div>
-                )}
-                
-                {/* Info overlaid at the bottom */}
-                <div className="absolute inset-x-0 bottom-0 p-6 flex items-end justify-between gap-3 text-white">
+                </div>
+
+                {/* Bottom: name + edit button */}
+                <div className="flex items-end justify-between gap-3">
                   <div>
                     <h3 className="text-xl font-bold font-body leading-tight">{session.profile.full_name}</h3>
-                    <p className="text-xs font-semibold opacity-75 capitalize mt-0.5">{session.profile.role}</p>
+                    <p className="text-xs font-semibold opacity-75 mt-0.5 truncate">{session.profile.email}</p>
                   </div>
-                  <button className="px-5 py-1.5 rounded-full border border-white/60 bg-white/10 hover:bg-white/20 active:scale-95 text-xs font-bold text-white transition-all cursor-pointer backdrop-blur-xs">
+                  <button
+                    onClick={() => {
+                      setEditProfileForm({
+                        full_name: session.profile.full_name || "",
+                        phone: session.profile.phone || "",
+                        whatsapp_number: session.profile.whatsapp_number || ""
+                      });
+                      setShowEditProfileModal(true);
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-white/60 bg-white/10 hover:bg-white/25 active:scale-95 text-xs font-bold text-white transition-all cursor-pointer shrink-0"
+                  >
+                    <Settings className="w-3 h-3" />
                     Edit
                   </button>
                 </div>
@@ -839,16 +902,19 @@ export default function Dashboard() {
           <div className="space-y-6 animate-fade-in">
             
             {/* Header Title with Button */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-neutral-200 pb-4">
-              <div>
-                <h1 className="text-2xl font-extrabold font-body">Kebutuhan Pasar & Pangan</h1>
-                <p className="text-xs text-neutral-400 mt-1">Daftar permintaan suplai pangan dari konsumen Agrivo</p>
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-4">
+                <div className="w-1.5 h-14 bg-[#FFC000] rounded-full shrink-0 mt-1" />
+                <div>
+                  <h1 className="text-3xl font-extrabold text-neutral-800 leading-tight font-body">Kebutuhan Pasar & Pangan</h1>
+                  <p className="text-sm text-neutral-500 mt-1">Daftar permintaan suplai pangan dari konsumen Agrivo</p>
+                </div>
               </div>
 
               {session.profile.role === "konsumen" && (
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#5E8000] text-white font-bold text-xs hover:bg-[#4d6900] active:scale-95 transition-all shadow-md shadow-[#5E8000]/10 cursor-pointer w-fit"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#5E8000] text-white font-bold text-xs hover:bg-[#4d6900] active:scale-95 transition-all shadow-md shadow-[#5E8000]/10 cursor-pointer w-fit shrink-0"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Buat Postingan Baru</span>
@@ -1030,9 +1096,14 @@ export default function Dashboard() {
         {/* PETANI TAB (FARMER OFFERS TRACKING) */}
         {activeTab === "petani" && (
           <div className="space-y-6 animate-fade-in">
-            <div className="border-b border-neutral-200 pb-4">
-              <h1 className="text-2xl font-extrabold font-body">Penawaran Saya</h1>
-              <p className="text-xs text-neutral-400 mt-1">Pantau status semua penawaran yang telah Anda ajukan ke konsumen</p>
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-4">
+                <div className="w-1.5 h-14 bg-[#FFC000] rounded-full shrink-0 mt-1" />
+                <div>
+                  <h1 className="text-3xl font-extrabold text-neutral-800 leading-tight font-body">Penawaran Saya</h1>
+                  <p className="text-sm text-neutral-500 mt-1">Pantau status semua penawaran yang telah Anda ajukan ke konsumen</p>
+                </div>
+              </div>
             </div>
 
             {error && (
@@ -1147,9 +1218,14 @@ export default function Dashboard() {
         {/* TRANSAKSI TAB */}
         {activeTab === "transaksi" && (
           <div className="space-y-6 animate-fade-in">
-            <div className="border-b border-neutral-200 pb-4">
-              <h1 className="text-2xl font-extrabold font-body">Kesepakatan & Transaksi</h1>
-              <p className="text-xs text-neutral-400 mt-1">Daftar transaksi aktif berdasarkan offer yang telah diterima</p>
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-4">
+                <div className="w-1.5 h-14 bg-[#FFC000] rounded-full shrink-0 mt-1" />
+                <div>
+                  <h1 className="text-3xl font-extrabold text-neutral-800 leading-tight font-body">Kesepakatan & Transaksi</h1>
+                  <p className="text-sm text-neutral-500 mt-1">Daftar transaksi aktif berdasarkan offer yang telah diterima</p>
+                </div>
+              </div>
             </div>
 
             {error && (
@@ -1309,101 +1385,207 @@ export default function Dashboard() {
         {activeTab === "ai" && (
           <div className="space-y-6">
             
-            {/* Header Title */}
-            <div className="border-b border-neutral-200 pb-4 flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-extrabold font-body">Asisten Lahan Pintar (AI)</h1>
-                <p className="text-xs text-neutral-400 mt-1">Dapatkan rekomendasi otomatisasi IoT dan analisis digital twin Lahan Anda</p>
+            {/* Header Title with vertical bar */}
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-4">
+                <div className="w-1.5 h-14 bg-[#FFC000] rounded-full shrink-0 mt-1" />
+                <div>
+                  <h1 className="text-3xl font-extrabold text-neutral-800 leading-tight font-body">Asisten Lahan Pintar</h1>
+                  <p className="text-sm text-neutral-500 mt-1">Dapatkan Rekomendasi Otomatisasi IoT dan analisis digital twin lahan anda</p>
+                </div>
               </div>
 
               {aiMode !== "recommend" && (
                 <button
                   onClick={() => setAiMode("recommend")}
-                  className="px-3.5 py-1.5 rounded-lg border border-neutral-200 text-xs font-bold text-neutral-600 hover:bg-neutral-50 transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-xl border-2 border-neutral-200 text-xs font-bold text-neutral-600 hover:bg-neutral-50 transition-all cursor-pointer bg-white"
                 >
                   Rekomendasi Baru
                 </button>
               )}
             </div>
 
+            {/* Error / Success notifications */}
+            {error && (
+              <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded-r-xl">
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 text-sm rounded-r-xl">
+                {success}
+              </div>
+            )}
+
             {/* AI RECOMMENDATION FORM */}
             {aiMode === "recommend" && (
-              <div className="bg-white rounded-3xl border border-neutral-100 shadow-sm p-6 sm:p-8">
-                <div className="flex items-center gap-2 mb-6">
-                  <Sparkles className="w-5 h-5 text-[#FFC000]" />
-                  <h3 className="text-lg font-bold text-neutral-900">Form Analisis Lahan</h3>
+              <div className="bg-white rounded-[32px] border-2 border-[#FFC000]/10 shadow-[0_12px_36px_rgba(0,0,0,0.03)] p-8 relative overflow-hidden mt-6">
+                {/* Brand Logo on Top Right */}
+                <div className="absolute top-8 right-8">
+                  <svg viewBox="0 0 100 100" className="w-10 h-10">
+                    <path d="M20,80 L50,20 L80,80 L65,80 L50,50 L35,80 Z" fill="#5E8000" />
+                    <path d="M50,50 L65,80 L80,80 Z" fill="#FFC000" />
+                  </svg>
                 </div>
 
-                <form onSubmit={handleAIRecommendation} className="space-y-5">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <h3 className="text-lg font-bold text-neutral-900 mb-6 font-body">Isi Data Dibawah ini</h3>
+
+                <form onSubmit={handleAIRecommendation} className="space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-1.5">Komoditas</label>
+                      <label className="block text-sm font-semibold text-neutral-800 mb-2 font-body">Komoditas</label>
                       <input
                         type="text"
                         required
+                        placeholder="Cabai, Terong dll..."
                         value={recommendationForm.komoditas}
                         onChange={(e) => setRecommendationForm({...recommendationForm, komoditas: e.target.value})}
-                        className="w-full px-3.5 py-3 rounded-xl border border-neutral-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#5E8000]/20 focus:border-[#5E8000] bg-neutral-50 focus:bg-white"
+                        className="w-full px-4 py-3 rounded-2xl border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-[#A1C942]/20 focus:border-[#A1C942] bg-[#F9F9F9] text-sm text-neutral-800 placeholder-neutral-400/80 font-body"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-1.5">Luas Lahan (m²)</label>
+                      <label className="block text-sm font-semibold text-neutral-800 mb-2 font-body">Luas Lahan</label>
                       <input
-                        type="number"
+                        type="text"
                         required
-                        value={recommendationForm.luas_lahan_m2}
-                        onChange={(e) => setRecommendationForm({...recommendationForm, luas_lahan_m2: parseFloat(e.target.value)})}
-                        className="w-full px-3.5 py-3 rounded-xl border border-neutral-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#5E8000]/20 focus:border-[#5E8000] bg-neutral-50 focus:bg-white"
+                        placeholder="1000 dll............"
+                        value={recommendationForm.luas_lahan_m2 || ""}
+                        onChange={(e) => setRecommendationForm({...recommendationForm, luas_lahan_m2: parseFloat(e.target.value) || 0})}
+                        className="w-full px-4 py-3 rounded-2xl border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-[#A1C942]/20 focus:border-[#A1C942] bg-[#F9F9F9] text-sm text-neutral-800 placeholder-neutral-400/80 font-body"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-1.5">Lokasi</label>
+                      <label className="block text-sm font-semibold text-neutral-800 mb-2 font-body">Lokasi</label>
                       <input
                         type="text"
                         required
+                        placeholder="Jawa Tengah, Jakarta dll..."
                         value={recommendationForm.lokasi}
                         onChange={(e) => setRecommendationForm({...recommendationForm, lokasi: e.target.value})}
-                        className="w-full px-3.5 py-3 rounded-xl border border-neutral-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#5E8000]/20 focus:border-[#5E8000] bg-neutral-50 focus:bg-white"
+                        className="w-full px-4 py-3 rounded-2xl border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-[#A1C942]/20 focus:border-[#A1C942] bg-[#F9F9F9] text-sm text-neutral-800 placeholder-neutral-400/80 font-body"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-1.5">Maksimal Budget (Rp)</label>
+                      <label className="block text-sm font-semibold text-neutral-800 mb-2 font-body">Maksimal budget</label>
                       <input
-                        type="number"
+                        type="text"
                         required
-                        value={recommendationForm.budget}
-                        onChange={(e) => setRecommendationForm({...recommendationForm, budget: parseFloat(e.target.value)})}
-                        className="w-full px-3.5 py-3 rounded-xl border border-neutral-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#5E8000]/20 focus:border-[#5E8000] bg-neutral-50 focus:bg-white"
+                        placeholder="12000000 dll........."
+                        value={recommendationForm.budget || ""}
+                        onChange={(e) => setRecommendationForm({...recommendationForm, budget: parseFloat(e.target.value) || 0})}
+                        className="w-full px-4 py-3 rounded-2xl border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-[#A1C942]/20 focus:border-[#A1C942] bg-[#F9F9F9] text-sm text-neutral-800 placeholder-neutral-400/80 font-body"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-1.5">Kondisi Lahan Saat Ini</label>
+                    <label className="block text-sm font-semibold text-neutral-800 mb-2 font-body">Kondisi lahan saat ini</label>
                     <textarea
                       required
+                      placeholder="Jelaskan kondisi lahanmu saat ini..."
                       value={recommendationForm.kondisi_saat_ini}
                       onChange={(e) => setRecommendationForm({...recommendationForm, kondisi_saat_ini: e.target.value})}
-                      rows={3}
-                      className="w-full px-3.5 py-3 rounded-xl border border-neutral-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#5E8000]/20 focus:border-[#5E8000] bg-neutral-50 focus:bg-white"
+                      rows={5}
+                      className="w-full px-4 py-3 rounded-2xl border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-[#A1C942]/20 focus:border-[#A1C942] bg-[#F9F9F9] text-sm text-neutral-800 placeholder-neutral-400/80 resize-none font-body"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 rounded-xl bg-[#5E8000] text-white font-bold text-sm hover:bg-[#4d6900] active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-3.5 rounded-2xl border-2 border-[#A1C942] text-neutral-800 font-bold text-sm hover:bg-[#A1C942] hover:text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer bg-white font-body"
                   >
                     {loading ? (
-                      <><Loader2 className="w-4 h-4 animate-spin" /> Menganalisis Lahan...</>
+                      <><Loader2 className="w-4 h-4 animate-spin text-[#A1C942]" /> Menganalisis...</>
                     ) : (
-                      "Analisis Lahan via AI"
+                      "Analisis"
                     )}
                   </button>
                 </form>
+              </div>
+            )}
+
+            {/* AI HISTORY LIST */}
+            {aiMode === "recommend" && (
+              <div className="bg-white rounded-[32px] border-2 border-neutral-100 shadow-[0_12px_36px_rgba(0,0,0,0.02)] p-8 mt-6 space-y-6">
+                <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
+                  <h3 className="text-lg font-bold text-neutral-900 font-body">Riwayat Rekomendasi Lahan</h3>
+                  <span className="text-xs text-neutral-400 font-semibold">{allPreviousRecs.length} Rekomendasi</span>
+                </div>
+
+                {allPreviousRecs.length === 0 ? (
+                  <div className="text-center py-8 text-neutral-400 text-sm font-body">
+                    Belum ada riwayat rekomendasi. Isi data di atas untuk memulai analisis pertama Anda.
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                    {allPreviousRecs.map((rec) => {
+                      const dateStr = new Date(rec.created_at).toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric"
+                      });
+                      return (
+                        <div key={rec.id} className="p-5 rounded-2xl border border-neutral-200 hover:border-[#A1C942]/60 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#F9F9F9]">
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2">
+                              <span className="px-2.5 py-0.5 rounded-full bg-[#A1C942]/10 text-[#5E8000] text-[10px] font-bold uppercase font-body">
+                                {rec.komoditas}
+                              </span>
+                              <span className="text-xxs text-neutral-400 font-semibold font-body">{dateStr}</span>
+                            </div>
+                            <h4 className="font-bold text-sm text-neutral-800 leading-snug font-body">
+                              {rec.solution_name}
+                            </h4>
+                            <div className="flex items-center gap-3 text-xxs text-neutral-500 font-body">
+                              <span>Luas: <strong>{rec.luas_lahan_m2} m²</strong></span>
+                              <span>•</span>
+                              <span>Biaya: <strong>Rp {rec.estimated_cost?.toLocaleString("id-ID")}</strong></span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              onClick={() => {
+                                handleSelectHistoryRec(rec);
+                                setAiMode("result");
+                              }}
+                              className="px-4 py-2 rounded-xl border border-neutral-300 text-neutral-600 hover:bg-neutral-50 active:scale-95 transition-all text-xs font-bold cursor-pointer font-body bg-white"
+                            >
+                              Detail
+                            </button>
+                            
+                            {rec.simulation ? (
+                              <button
+                                onClick={() => {
+                                  handleSelectHistoryRec(rec);
+                                  setAiMode("simulate");
+                                }}
+                                className="px-4 py-2 rounded-xl bg-[#5E8000] text-white hover:bg-[#4d6900] active:scale-95 transition-all text-xs font-bold cursor-pointer font-body flex items-center gap-1 shadow-sm"
+                              >
+                                <BrainCircuit className="w-3 h-3" />
+                                <span>Digital Twin</span>
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  handleSelectHistoryRec(rec);
+                                  setAiMode("result");
+                                }}
+                                className="px-4 py-2 rounded-xl bg-[#A1C942] text-white hover:bg-[#8eb830] active:scale-95 transition-all text-xs font-bold cursor-pointer font-body shadow-sm"
+                              >
+                                Mulai Simulasi
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
@@ -1412,49 +1594,67 @@ export default function Dashboard() {
               <div className="space-y-6 animate-fade-in">
                 
                 {/* Result Overview card */}
-                <div className="bg-white rounded-3xl border border-neutral-100 shadow-sm p-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <span className="px-2.5 py-1 rounded-full bg-[#5E8000]/10 text-[#5E8000] text-xxs font-bold uppercase tracking-wider">Hasil Rekomendasi</span>
-                      <h2 className="text-xl font-bold mt-2 text-neutral-900">{aiResult.solution_name}</h2>
+                <div className="bg-white rounded-[32px] border border-[#A1C942] shadow-[0_12px_36px_rgba(0,0,0,0.03)] p-6 sm:p-8">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                    <div className="space-y-3">
+                      <span className="inline-block px-5 py-1.5 rounded-full border border-[#FFC000] text-neutral-800 text-xs font-bold bg-white font-body">
+                        Rekomendasi
+                      </span>
+                      <h2 className="text-xl font-extrabold text-neutral-900 leading-tight font-body">
+                        {aiResult.solution_name}
+                      </h2>
                     </div>
-                    <div className="text-right">
-                      <div className="text-xxs text-neutral-400 uppercase font-semibold">Estimasi Total Biaya</div>
-                      <div className="text-xl font-bold text-[#5E8000] mt-1">
+                    <div className="text-left sm:text-right border-l-2 sm:border-l-0 sm:border-r-2 border-[#A1C942] pl-3 sm:pl-0 sm:pr-3 py-1">
+                      <div className="text-xxs text-neutral-400 uppercase font-bold tracking-wider font-body">Estimasi Total</div>
+                      <div className="text-2xl font-black text-[#A1C942] mt-0.5 font-body">
                         Rp {aiResult.estimated_cost?.toLocaleString("id-ID")}
                       </div>
                     </div>
                   </div>
 
-                  <p className="text-sm text-neutral-500 leading-relaxed mt-4">{aiResult.description}</p>
+                  <p className="text-sm text-neutral-500 leading-relaxed mt-5 font-body">
+                    {aiResult.description}
+                  </p>
                 </div>
 
                 {/* IoT Components Recommendations */}
-                <div className="space-y-3">
-                  <h4 className="text-base font-bold text-neutral-900">Komponen IoT yang Direkomendasikan</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-5 pt-2">
+                  <h4 className="text-lg font-bold text-neutral-900 border-b border-neutral-300 pb-1.5 w-fit font-body">
+                    Komponen IoT yang direkomendasikan
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     {aiResult.components?.map((comp, idx) => (
-                      <div key={idx} className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-4 flex gap-4">
-                        <div className="w-16 h-16 rounded-xl bg-neutral-50 border border-neutral-100 flex items-center justify-center text-2xl shrink-0">🛠</div>
-                        <div>
-                          <h5 className="font-bold text-sm text-neutral-900">{comp.component_name}</h5>
-                          <p className="text-xxs text-neutral-400 mt-0.5 leading-relaxed">{comp.description}</p>
-                          <div className="text-xs font-bold text-[#5E8000] mt-2">Rp {comp.price?.toLocaleString("id-ID")}</div>
+                      <div key={idx} className="bg-white rounded-3xl border border-[#A1C942]/60 shadow-[0_8px_24px_rgba(0,0,0,0.02)] p-6 space-y-4">
+                        <div className="flex gap-4 items-start">
+                          {/* Circular IoT green box */}
+                          <div className="w-14 h-14 rounded-2xl bg-[#A1C942] flex items-center justify-center text-white shrink-0 shadow-sm shadow-[#A1C942]/20">
+                            {/* IoT Waves icon */}
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-7 h-7">
+                              <path d="M12 2a10 10 0 0 1 10 10c0 2.5-.9 4.8-2.4 6.6L18 17a8 8 0 0 0 2-5 8 8 0 0 0-8-8v2a6 6 0 0 1 6 6c0 1.5-.5 2.9-1.4 4l-1.6-1.6c.6-.7 1-1.6 1-2.4a4 4 0 0 0-4-4v2a2 2 0 0 1 2 2c0 .5-.2 1-.5 1.3L12 12V2z" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h5 className="font-bold text-sm text-neutral-900 leading-snug font-body">{comp.component_name}</h5>
+                            <p className="text-xxs text-neutral-400 mt-1 leading-relaxed font-body">{comp.description}</p>
+                          </div>
+                        </div>
+                        <div className="border border-[#A1C942] text-[#5E8000] font-bold text-xs py-2 px-4 rounded-2xl text-center select-none bg-white font-body">
+                          Rp {comp.price?.toLocaleString("id-ID")}
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Simulate Digital Twin Button */}
-                <div className="p-6 bg-gradient-to-r from-[#5E8000]/10 to-[#A1C942]/10 border border-[#5E8000]/20 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div>
-                    <h4 className="font-bold text-neutral-900">Simulasikan Digital Twin Lahan Anda</h4>
-                    <p className="text-xs text-neutral-500 mt-1">Gunakan model matematika AI untuk memproyeksikan hasil panen, efisiensi air, dan profit.</p>
+                {/* Simulate Digital Twin Button Row */}
+                <div className="pt-6 border-t border-neutral-100 flex flex-col sm:flex-row items-center justify-between gap-6">
+                  <div className="space-y-1">
+                    <h5 className="font-bold text-neutral-950 text-sm font-body">Simulasikan Digital Twin Lahan Anda</h5>
+                    <p className="text-xxs text-neutral-400 max-w-md font-body">Gunakan model matematika AI untuk memproyeksikan hasil panen, efisiensi air, dan profit.</p>
                   </div>
                   <button
                     onClick={() => handleAISimulation(aiResult.recommendation_id)}
-                    className="px-6 py-2.5 rounded-xl bg-[#5E8000] text-white font-bold text-xs hover:bg-[#4d6900] active:scale-95 transition-all shadow-md shadow-[#5E8000]/10 shrink-0 cursor-pointer"
+                    className="w-full sm:w-auto px-10 py-3.5 rounded-2xl bg-[#A1C942] hover:bg-[#8eb830] text-white font-bold text-sm transition-all shadow-md shadow-[#A1C942]/10 cursor-pointer font-body"
                   >
                     Mulai Simulasi
                   </button>
@@ -1469,74 +1669,77 @@ export default function Dashboard() {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {/* Proyeksi Yield */}
-                  <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5 text-center">
-                    <TrendingUp className="w-5 h-5 text-[#A1C942] mx-auto mb-2" />
-                    <div className="text-xxs text-neutral-400 uppercase font-semibold">Kenaikan Hasil Panen</div>
-                    <div className="text-2xl font-black text-neutral-900 mt-1">+{simulationResult.yield_increase_percent}%</div>
+                  <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6 text-center space-y-2">
+                    <TrendingUp className="w-5 h-5 text-[#A1C942] mx-auto" />
+                    <div className="text-xxs text-neutral-400 uppercase font-bold tracking-wider font-body">Kenaikan Hasil Panen</div>
+                    <div className="text-2xl font-black text-neutral-900 font-body">+{simulationResult.yield_increase_percent}%</div>
                   </div>
 
                   {/* Efisiensi Air */}
-                  <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5 text-center">
-                    <Droplets className="w-5 h-5 text-[#5E8000] mx-auto mb-2" />
-                    <div className="text-xxs text-neutral-400 uppercase font-semibold">Pengurangan Air</div>
-                    <div className="text-2xl font-black text-neutral-900 mt-1">-{simulationResult.water_usage_reduction_percent}%</div>
+                  <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6 text-center space-y-2">
+                    <Droplets className="w-5 h-5 text-[#5E8000] mx-auto" />
+                    <div className="text-xxs text-neutral-400 uppercase font-bold tracking-wider font-body">Pengurangan Air</div>
+                    <div className="text-2xl font-black text-neutral-900 font-body">-{simulationResult.water_usage_reduction_percent}%</div>
                   </div>
 
                   {/* Breakeven */}
-                  <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5 text-center">
-                    <DollarSign className="w-5 h-5 text-[#FFC000] mx-auto mb-2" />
-                    <div className="text-xxs text-neutral-400 uppercase font-semibold">Balik Modal (Siklus)</div>
-                    <div className="text-2xl font-black text-neutral-900 mt-1">{simulationResult.breakeven_cycle} Panen</div>
+                  <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6 text-center space-y-2">
+                    <DollarSign className="w-5 h-5 text-[#FFC000] mx-auto" />
+                    <div className="text-xxs text-neutral-400 uppercase font-bold tracking-wider font-body">Balik Modal (Siklus)</div>
+                    <div className="text-2xl font-black text-neutral-900 font-body">{simulationResult.breakeven_cycle} Panen</div>
                   </div>
 
                   {/* Keuntungan Bersih */}
-                  <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5 text-center">
-                    <Sparkles className="w-5 h-5 text-[#E1C055] mx-auto mb-2" />
-                    <div className="text-xxs text-neutral-400 uppercase font-semibold">Profit Bersih Thn 1</div>
-                    <div className="text-base font-black text-neutral-900 mt-1 truncate">
+                  <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-6 text-center space-y-2">
+                    <Sparkles className="w-5 h-5 text-[#E1C055] mx-auto" />
+                    <div className="text-xxs text-neutral-400 uppercase font-bold tracking-wider font-body">Profit Bersih Thn 1</div>
+                    <div className="text-base font-black text-neutral-900 truncate font-body">
                       Rp {simulationResult.projected_net_profit_year1?.toLocaleString("id-ID")}
                     </div>
                   </div>
                 </div>
 
                 {/* AI Insight Text */}
-                <div className="bg-white rounded-3xl border border-neutral-100 shadow-sm p-6">
-                  <h4 className="font-bold text-neutral-900 mb-2 flex items-center gap-1.5">
-                    <BrainCircuit className="w-4 h-4 text-[#5E8000]" /> Analisis & Solusi AI
+                <div className="bg-white rounded-3xl border border-neutral-100 shadow-sm p-6 space-y-3">
+                  <h4 className="font-bold text-neutral-900 flex items-center gap-2 text-base font-body">
+                    <BrainCircuit className="w-4 h-4 text-[#5E8000]" />
+                    <span>Analisis & Solusi AI</span>
                   </h4>
-                  <p className="text-sm text-neutral-500 leading-relaxed">{simulationResult.ai_insight_text}</p>
+                  <p className="text-sm text-neutral-500 leading-relaxed font-body">{simulationResult.ai_insight_text}</p>
                 </div>
 
                 {/* Scenarios Comparison */}
                 {simulationResult.scenarios?.length > 0 && (
-                  <div className="space-y-3">
-                    <h4 className="text-base font-bold text-neutral-900">Perbandingan Skenario Anggaran</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-bold text-neutral-900 font-body">Perbandingan Skenario Anggaran</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       {simulationResult.scenarios.map((sc, idx) => (
-                        <div key={idx} className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5 space-y-3">
+                        <div key={idx} className="bg-white rounded-3xl border border-neutral-150 shadow-[0_8px_24px_rgba(0,0,0,0.02)] p-6 space-y-4">
                           <div className="flex items-center justify-between">
-                            <span className="font-bold text-sm text-neutral-900">Skenario {sc.scenario_label}</span>
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              sc.is_within_budget ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+                            <span className="font-bold text-sm text-neutral-900 font-body">Skenario {sc.scenario_label}</span>
+                            <span className={`px-3 py-1 rounded-full text-xxs font-bold font-body ${
+                              sc.is_within_budget 
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-100" 
+                                : "bg-red-50 text-red-700 border border-red-100"
                             }`}>
                               {sc.is_within_budget ? "Sesuai Budget" : "Melebihi Budget"}
                             </span>
                           </div>
                           
-                          <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="grid grid-cols-2 gap-4 text-xs pt-2">
                             <div>
-                              <div className="text-neutral-400 font-semibold">Estimasi Biaya</div>
-                              <div className="font-bold mt-0.5">Rp {sc.total_cost?.toLocaleString("id-ID")}</div>
+                              <div className="text-neutral-400 font-semibold uppercase tracking-wider text-[10px] font-body">Estimasi Biaya</div>
+                              <div className="font-bold mt-1 text-sm text-neutral-800 font-body">Rp {sc.total_cost?.toLocaleString("id-ID")}</div>
                             </div>
                             <div>
-                              <div className="text-neutral-400 font-semibold">Proyeksi Hasil</div>
-                              <div className="font-bold mt-0.5">{sc.projected_yield_kg} kg</div>
+                              <div className="text-neutral-400 font-semibold uppercase tracking-wider text-[10px] font-body">Proyeksi Hasil</div>
+                              <div className="font-bold mt-1 text-sm text-neutral-800 font-body">{sc.projected_yield_kg} kg</div>
                             </div>
                           </div>
 
-                          <div className="pt-2 border-t border-neutral-50">
-                            <div className="text-[10px] text-neutral-400 font-semibold">Analisis Mitigasi:</div>
-                            <p className="text-xxs text-neutral-500 leading-relaxed mt-1">{sc.ai_recommendation_note}</p>
+                          <div className="pt-4 border-t border-neutral-100">
+                            <div className="text-xxs text-neutral-400 font-semibold uppercase tracking-wider font-body">Analisis Mitigasi:</div>
+                            <p className="text-xxs text-neutral-500 leading-relaxed mt-2 font-body">{sc.ai_recommendation_note}</p>
                           </div>
                         </div>
                       ))}
@@ -2059,6 +2262,122 @@ export default function Dashboard() {
                   "Kirim Ulasan"
                 )}
               </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT PROFILE MODAL */}
+      {showEditProfileModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl animate-fade-in overflow-hidden">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-[#5E8000] to-[#A1C942] px-8 py-6 flex items-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-2xl font-black text-white uppercase select-none">
+                {session.profile.full_name?.[0] || "?"}
+              </div>
+              <div className="text-white">
+                <h3 className="font-bold text-lg font-body leading-tight">Edit Profil</h3>
+                <p className="text-xs text-white/75 mt-0.5">Perbarui data diri Anda</p>
+              </div>
+              <button
+                onClick={() => setShowEditProfileModal(false)}
+                className="ml-auto text-white/70 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setLoading(true);
+                setError("");
+                try {
+                  await updateProfile(
+                    {
+                      full_name: editProfileForm.full_name,
+                      phone: editProfileForm.phone,
+                      whatsapp_number: editProfileForm.whatsapp_number
+                    },
+                    session.token
+                  );
+                  // Refresh session in localStorage so UI reflects changes immediately
+                  const updatedProfile = {
+                    ...session.profile,
+                    full_name: editProfileForm.full_name,
+                    phone: editProfileForm.phone,
+                    whatsapp_number: editProfileForm.whatsapp_number
+                  };
+                  const updatedSession = { ...session, profile: updatedProfile };
+                  localStorage.setItem("user_profile", JSON.stringify(updatedProfile));
+                  setSession(updatedSession);
+                  setSuccess("Profil berhasil diperbarui!");
+                  setShowEditProfileModal(false);
+                  setTimeout(() => setSuccess(""), 3000);
+                } catch (err) {
+                  setError(err.message || "Gagal memperbarui profil.");
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              className="p-8 space-y-5"
+            >
+              <div>
+                <label className="block text-sm font-semibold text-neutral-800 mb-2 font-body">Nama Lengkap</label>
+                <input
+                  type="text"
+                  required
+                  value={editProfileForm.full_name}
+                  onChange={(e) => setEditProfileForm({ ...editProfileForm, full_name: e.target.value })}
+                  className="w-full px-4 py-3 rounded-2xl border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-[#A1C942]/20 focus:border-[#A1C942] bg-[#F9F9F9] text-sm font-body"
+                  placeholder="Nama lengkap Anda"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-neutral-800 mb-2 font-body">Nomor Telepon</label>
+                <input
+                  type="tel"
+                  value={editProfileForm.phone}
+                  onChange={(e) => setEditProfileForm({ ...editProfileForm, phone: e.target.value })}
+                  className="w-full px-4 py-3 rounded-2xl border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-[#A1C942]/20 focus:border-[#A1C942] bg-[#F9F9F9] text-sm font-body"
+                  placeholder="08xxxxxxxxxx"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-neutral-800 mb-2 font-body">Nomor WhatsApp</label>
+                <input
+                  type="tel"
+                  value={editProfileForm.whatsapp_number}
+                  onChange={(e) => setEditProfileForm({ ...editProfileForm, whatsapp_number: e.target.value })}
+                  className="w-full px-4 py-3 rounded-2xl border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-[#A1C942]/20 focus:border-[#A1C942] bg-[#F9F9F9] text-sm font-body"
+                  placeholder="08xxxxxxxxxx (tanpa +62)"
+                />
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-xs rounded-r-lg font-body">{error}</div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEditProfileModal(false)}
+                  className="flex-1 py-3 rounded-2xl border-2 border-neutral-200 text-neutral-600 font-bold text-sm hover:bg-neutral-50 transition-all cursor-pointer font-body"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 py-3 rounded-2xl bg-[#5E8000] text-white font-bold text-sm hover:bg-[#4d6900] transition-all disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer font-body"
+                >
+                  {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Menyimpan...</> : "Simpan"}
+                </button>
+              </div>
             </form>
           </div>
         </div>
