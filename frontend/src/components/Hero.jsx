@@ -1,103 +1,59 @@
-import { useNavigate } from "react-router-dom";
+import React from "react";
+import "@fontsource/poppins/400.css";
+import "@fontsource/poppins/500.css";
+import "@fontsource/poppins/600.css";
+import "@fontsource/poppins/700.css";
 
-export default function Hero() {
-  const navigate = useNavigate();
+export default function HeroSection() {
   return (
-    <section className="relative w-full overflow-hidden px-6 md:px-14 md:py-15">
-      <div
-        className="pointer-events-none absolute -top-40 -right-40 w-[520px] h-[520px] rounded-full blur-3xl opacity-40"
-        style={{ background: "radial-gradient(circle, #A1C942 0%, transparent 70%)" }}
-      />
-      <div
-        className="pointer-events-none absolute top-1/3 -left-32 w-[380px] h-[380px] rounded-full blur-3xl opacity-30"
-        style={{ background: "radial-gradient(circle, #FFC000 0%, transparent 70%)" }}
-      />
-      <div
-        className="pointer-events-none absolute bottom-0 right-1/4 w-[300px] h-[300px] rounded-full blur-3xl opacity-20"
-        style={{ background: "radial-gradient(circle, #D4AF37 0%, transparent 70%)" }}
+    <section
+      style={{ fontFamily: "Poppins, sans-serif" }}
+      className="relative w-full h-[560px] sm:h-[520px] md:h-[600px] lg:h-[680px] overflow-hidden rounded-b-2xl md:rounded-b-3xl shadow-lg md:shadow-2xl"
+    >
+      <img
+        src="/img/Hero-sec.png"
+        alt="Petani menggunakan aplikasi Agrivo di sawah"
+        className="absolute inset-0 w-full h-full object-cover object-center"
       />
 
-      <div className="relative max-w-6xl mx-auto grid lg:grid-cols-2 gap-14 items-center">
-        <div className="flex flex-col gap-7">
-          <span
-            className="inline-flex w-fit items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold text-white shadow-md"
-            style={{ background: "linear-gradient(90deg, #5E8000, #A1C942)" }}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4">
-              <path d="M12 3c-4 3-6 7-6 11a6 6 0 0 0 12 0c0-4-2-8-6-11Z" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+      <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent" />
+
+      <div className="relative z-10 h-full w-full max-w-7xl mx-auto px-5 sm:px-6 md:px-12 flex items-center justify-between gap-5 sm:gap-10 lg:gap-20">
+        {/* mx-auto + text-center: teks jadi rata tengah di mobile.
+            md:mx-0 md:text-left: balik rata kiri begitu masuk desktop. */}
+        <div className="max-w-xl mx-auto text-center md:mx-0 md:text-left">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-2 md:mb-3 drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">
             Agrivo
-          </span>
-
-          <h1 className="text-4xl md:text-5xl lg:text-[3.4rem] font-bold leading-[1.1] text-gray-900">
-            Ciptakan pertanian dengan{" "}
-            <span
-              className="relative inline-block bg-clip-text text-transparent"
-              style={{ backgroundImage: "linear-gradient(90deg, #D4AF37, #5E8000)" }}
-            >
-              teknologi saat ini
-              <svg
-                className="absolute -bottom-2 left-0 w-full"
-                height="10"
-                viewBox="0 0 200 10"
-                preserveAspectRatio="none"
-              >
-                <path
-                  d="M0 6 Q50 0 100 6 T200 6"
-                  stroke="#A1C942"
-                  strokeWidth="4"
-                  fill="none"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </span>
-            , lebih mudah dan cerdas
           </h1>
 
-         
+          <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-white leading-snug mb-3 md:mb-4 drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
+            Ciptakan pertanian dengan teknologi saat ini, lebih mudah dan
+            cerdas
+          </h2>
 
-          <div className="flex flex-wrap items-center gap-4 mt-1">
-            <button
-              type="button"
-              onClick={() => navigate("/register")}
-              className="group relative overflow-hidden rounded-2xl px-8 py-4
-                shadow-[0_10px_28px_-6px_rgba(94,128,0,0.5)]
-                transition-all duration-300 ease-out
-                hover:shadow-[0_14px_36px_-6px_rgba(94,128,0,0.65)]
-                hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] cursor-pointer"
-              style={{ background: "linear-gradient(90deg, #FFC000, #A1C942)" }}
-            >
-              <span
-                className="pointer-events-none absolute inset-0 -translate-x-full
-                  bg-gradient-to-r from-transparent via-white/50 to-transparent
-                  group-hover:translate-x-full transition-transform duration-1000 ease-in-out"
-              />
-              <span className="relative flex items-center gap-2 text-white font-semibold text-base tracking-wide">
-                Mulai sekarang
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1">
-                  <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-            </button>
-          </div>
+          <p className="hidden sm:block text-sm md:text-base text-white/90 leading-relaxed mb-5 md:mb-7 max-w-md mx-auto md:mx-0 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]">
+            Petani adalah pahlawan pangan yang bekerja dengan penuh dedikasi
+            untuk menghasilkan hasil panen terbaik di bumi. Setiap pekerjaan
+            yang mereka lakukan menyimpan kerja keras, ketekunan, dan
+            perjuangan para petani demi menjaga keberlangsungan kehidupan.
+          </p>
 
-          
+          <p className="sm:hidden text-sm text-white/90 leading-relaxed mb-5 max-w-xs mx-auto drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]">
+            Petani, pahlawan pangan yang menjaga keberlangsungan kehidupan
+            dengan kerja keras dan ketekunan.
+          </p>
+
+          <button className="bg-gradient-to-r from-[#FFC000] via-yellow-500 to-[#A1C964] text-white font-semibold text-sm md:text-base px-6 md:px-8 py-2.5 md:py-3 rounded-2xl shadow-lg">
+            Mulai Sekarang
+          </button>
         </div>
 
-        <div className="relative">
-          <div
-            className="absolute -inset-4 rounded-[2rem] blur-2xl opacity-30"
+        <div className="hidden absolute right-0 -bottom-16 md:flex h-full items-end shrink-0 self-end">
+          <img
+            src="/img/orang.png"
+            alt=""
+            className="max-h-full w-auto object-contain object-bottom"
           />
-          <div className="relative rounded-[2rem]">
-            <img
-              src="/img/Hero-sec.png"
-              alt=""
-              className="w-full object-cover"
-            />
-           
-          </div>
-
-          
         </div>
       </div>
     </section>

@@ -37,7 +37,7 @@ export default function AboutSection() {
   const [active, setActive] = useState("about");
 
   return (
-    <section id="about" style={{ fontFamily: "Poppins, sans-serif" }} className="w-full px-3 py-8 sm:px-6 sm:py-14 lg:px-10 font-inter">
+    <section id="about" style={{ fontFamily: "Poppins, sans-serif" }} className="w-full px-3 py-8 mt-20 sm:px-6 sm:py-14 lg:px-10 font-inter">
       <div className="mx-auto max-w-6xl overflow-hidden rounded-3xl bg-[#4C6B00] shadow-2xl shadow-black/40">
         <div className="flex flex-col sm:h-[460px] sm:flex-row">
           {SECTIONS.map((section, idx) => {

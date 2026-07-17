@@ -65,7 +65,6 @@ export default function Dashboard() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Weather States
   const [weather, setWeather] = useState({
     temperature: 28,
     description: "Cerah",
@@ -73,7 +72,6 @@ export default function Dashboard() {
   });
   const [time, setTime] = useState("");
 
-  // Marketplace States
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -89,14 +87,12 @@ export default function Dashboard() {
     deadline: ""
   });
 
-  // Marketplace Sub-states
   const [marketSubTab, setMarketSubTab] = useState("all"); // 'all' | 'mine'
   const [myPosts, setMyPosts] = useState([]);
   const [myOffers, setMyOffers] = useState([]);
   const [myTransactions, setMyTransactions] = useState([]);
   const [userReviews, setUserReviews] = useState([]);
   
-  // Post Drawer / Offer states
   const [selectedPost, setSelectedPost] = useState(null);
   const [postOffers, setPostOffers] = useState([]);
   const [showOfferModal, setShowOfferModal] = useState(false);
@@ -108,7 +104,6 @@ export default function Dashboard() {
     message: ""
   });
   
-  // Review state
   const [selectedTxForReview, setSelectedTxForReview] = useState(null);
   const [reviewPayload, setReviewPayload] = useState({
     rating: 5,
@@ -137,7 +132,6 @@ export default function Dashboard() {
   const [aiResult, setAiResult] = useState(null);
   const [simulationResult, setSimulationResult] = useState(null);
 
-  // Authenticate user session
   useEffect(() => {
     const activeSession = getSession();
     if (!activeSession) {
@@ -147,7 +141,6 @@ export default function Dashboard() {
     }
   }, [navigate]);
 
-  // Live ticking clock for banner
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
@@ -158,23 +151,19 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch dynamic weather based on user location or fallback
   useEffect(() => {
     if (!session) return;
     
     const loadWeather = async () => {
-      // Fallback coordinates (Nganjuk, Jawa Timur)
       let lat = -7.6043;
       let lng = 111.9045;
       let locName = "Nganjuk, Jawa Timur";
 
-      // If user profile has coordinates
       if (session.profile.latitude && session.profile.longitude) {
         lat = session.profile.latitude;
         lng = session.profile.longitude;
       }
       
-      // Try to get geolocation if allowed
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
@@ -192,7 +181,6 @@ export default function Dashboard() {
             }
           },
           async () => {
-            // Geolocation blocked or failed, use profile fallback
             try {
               const data = await fetchCurrentWeather(lat, lng);
               setWeather({
@@ -235,7 +223,6 @@ export default function Dashboard() {
     }
   };
 
-  // Load Marketplace & AI data when tab switches or marketplace sub-tab changes
   useEffect(() => {
     if (!session) return;
 
@@ -696,7 +683,6 @@ export default function Dashboard() {
               </div>
             </button>
 
-            {/* AI Assistant Tab */}
             <button
               onClick={() => { setActiveTab("ai"); setAiMode("recommend"); setError(""); setSuccess(""); }}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
@@ -2204,7 +2190,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* REVIEW SUBMISSION MODAL */}
       {selectedTxForReview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-3xl w-full max-w-md p-6 sm:p-8 space-y-6 shadow-2xl animate-fade-in">
