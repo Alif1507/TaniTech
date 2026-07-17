@@ -1,4 +1,7 @@
+import { useNavigate } from "react-router-dom";
+
 export default function Hero() {
+  const navigate = useNavigate();
   return (
     <section className="relative w-full overflow-hidden px-6 md:px-14 md:py-15">
       <div
@@ -56,11 +59,12 @@ export default function Hero() {
           <div className="flex flex-wrap items-center gap-4 mt-1">
             <button
               type="button"
+              onClick={() => navigate("/register")}
               className="group relative overflow-hidden rounded-2xl px-8 py-4
                 shadow-[0_10px_28px_-6px_rgba(94,128,0,0.5)]
                 transition-all duration-300 ease-out
                 hover:shadow-[0_14px_36px_-6px_rgba(94,128,0,0.65)]
-                hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
+                hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] cursor-pointer"
               style={{ background: "linear-gradient(90deg, #FFC000, #A1C942)" }}
             >
               <span

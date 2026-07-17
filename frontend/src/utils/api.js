@@ -297,6 +297,15 @@ export async function submitReview(payload, token) {
   return data;
 }
 
+export async function fetchUserReviews(userId) {
+  const response = await fetch(`${API_BASE_URL}/api/reviews/user/${userId}`);
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.detail || "Failed to fetch user reviews.");
+  }
+  return data;
+}
+
 export async function cancelPost(postId, token) {
   const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, {
     method: "DELETE",

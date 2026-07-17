@@ -25,7 +25,9 @@ import {
   MessageCircle,
   Check,
   Trash2,
-  ChevronRight
+  ChevronRight,
+  Tag,
+  ArrowLeft
 } from "lucide-react";
 import { 
   getSession, 
@@ -48,7 +50,8 @@ import {
   fetchMyTransactions,
   updateTransactionStatus,
   submitReview,
-  cancelPost
+  cancelPost,
+  fetchUserReviews
 } from "../utils/api";
 
 export default function Dashboard() {
@@ -90,6 +93,7 @@ export default function Dashboard() {
   const [myPosts, setMyPosts] = useState([]);
   const [myOffers, setMyOffers] = useState([]);
   const [myTransactions, setMyTransactions] = useState([]);
+  const [userReviews, setUserReviews] = useState([]);
   
   // Post Drawer / Offer states
   const [selectedPost, setSelectedPost] = useState(null);
@@ -209,11 +213,26 @@ export default function Dashboard() {
     loadWeather();
   }, [session]);
 
+  const loadProfileData = async () => {
+    if (!session?.profile?.id) return;
+    setLoading(true);
+    try {
+      const reviewsData = await fetchUserReviews(session.profile.id);
+      setUserReviews(reviewsData);
+    } catch (err) {
+      console.error("Gagal memuat ulasan profil:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Load Marketplace & AI data when tab switches or marketplace sub-tab changes
   useEffect(() => {
     if (!session) return;
 
-    if (activeTab === "marketplace") {
+    if (activeTab === "profile") {
+      loadProfileData();
+    } else if (activeTab === "marketplace") {
       loadMarketplaceData();
     } else if (activeTab === "petani") {
       loadPetaniData();
@@ -561,7 +580,7 @@ export default function Dashboard() {
           
           {/* Logo / Title */}
           <div className="flex items-center gap-2">
-            <span className="font-display font-black text-2xl tracking-tight text-[#5E8000]">
+            <span className="font-body font-black text-2xl tracking-tight text-[#5E8000]">
               AGRI<span className="text-[#A1C942]">VO</span>
             </span>
           </div>
@@ -653,14 +672,26 @@ export default function Dashboard() {
           </nav>
         </div>
 
-        {/* Logout Section */}
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold text-neutral-500 hover:bg-red-50 hover:text-red-600 transition-all cursor-pointer"
-        >
-          <LogOut className="w-4 h-4" />
-          <span>Logout</span>
-        </button>
+        {/* Sidebar Footer */}
+        <div className="space-y-1.5 border-t border-neutral-100 pt-4">
+          {/* Back to Landing Page */}
+          <button
+            onClick={() => navigate("/")}
+            className="w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold text-neutral-500 hover:bg-neutral-50 hover:text-neutral-800 transition-all cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Kembali ke Beranda</span>
+          </button>
+
+          {/* Logout Section */}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold text-neutral-500 hover:bg-red-50 hover:text-red-600 transition-all cursor-pointer"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Logout</span>
+          </button>
+        </div>
       </aside>
 
       {/* MAIN MAIN PANEL */}
@@ -668,106 +699,134 @@ export default function Dashboard() {
         
         {/* PROFILE TAB */}
         {activeTab === "profile" && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-fade-in">
             
             {/* Header Greeting */}
-            <h1 className="text-3xl font-extrabold font-display tracking-tight text-neutral-900 border-b-2 border-[#5E8000]/20 pb-2 w-fit">
+            <h1 className="text-3xl font-extrabold font-body tracking-tight text-neutral-900 pb-2">
               Hallo, {session.profile.full_name?.split(" ")[0]} 👋
             </h1>
 
+            {/* Error / Success notifications */}
+            {error && (
+              <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded-r-xl">
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 text-sm rounded-r-xl">
+                {success}
+              </div>
+            )}
+ 
             {/* Top Row: User Card & Data grid */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
               
               {/* Profile Card Left */}
-              <div className="md:col-span-5 bg-white rounded-3xl border border-neutral-100 shadow-sm p-6 flex flex-col items-center justify-center text-center">
-                <div className="relative mb-4">
-                  {/* Mock profile image or dynamic avatar */}
-                  <img
-                    src={session.profile.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80"}
-                    alt={session.profile.full_name}
-                    className="w-32 h-32 rounded-3xl object-cover border-4 border-[#A1C942]/10"
-                  />
-                  <span className="absolute bottom-2 right-2 w-5 h-5 rounded-full bg-[#5E8000] border-2 border-white flex items-center justify-center text-[10px] text-white">✓</span>
-                </div>
-
-                <h3 className="text-lg font-bold text-neutral-900">{session.profile.full_name}</h3>
-                <p className="text-xs font-semibold text-neutral-400 capitalize mb-4">{session.profile.role}</p>
-
-                <button className="px-5 py-1.5 rounded-full border border-neutral-200 text-xs font-bold text-neutral-600 hover:bg-neutral-50 active:scale-95 transition-all">
-                  Edit
-                </button>
-              </div>
-
-              {/* Data Lengkap Grid Right */}
-              <div className="md:col-span-7 space-y-4">
-                <h4 className="text-lg font-bold text-neutral-900 font-display pb-1 border-b border-neutral-200">Data Lengkap</h4>
+              <div className="md:col-span-5 relative rounded-[32px] overflow-hidden shadow-md aspect-square md:aspect-auto min-h-[290px] w-full group">
+                <img
+                  src={session.profile.avatar_url || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&h=400&q=80"}
+                  alt={session.profile.full_name}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent" />
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {/* Farmer Average Review Rating Badge */}
+                {session.profile.role === "petani" && (
+                  <div className="absolute top-4 left-4 z-10 px-3.5 py-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/10 text-white flex items-center gap-1.5 text-xs font-bold shadow-sm select-none">
+                    <Star className="w-3.5 h-3.5 text-[#FFC000] fill-[#FFC000]" />
+                    <span>
+                      {userReviews && userReviews.length > 0 
+                        ? (userReviews.reduce((sum, r) => sum + r.rating, 0) / userReviews.length).toFixed(1)
+                        : "0.0"
+                      }
+                      <span className="text-white/70 font-normal"> ({userReviews ? userReviews.length : 0} Ulasan)</span>
+                    </span>
+                  </div>
+                )}
+                
+                {/* Info overlaid at the bottom */}
+                <div className="absolute inset-x-0 bottom-0 p-6 flex items-end justify-between gap-3 text-white">
+                  <div>
+                    <h3 className="text-xl font-bold font-body leading-tight">{session.profile.full_name}</h3>
+                    <p className="text-xs font-semibold opacity-75 capitalize mt-0.5">{session.profile.role}</p>
+                  </div>
+                  <button className="px-5 py-1.5 rounded-full border border-white/60 bg-white/10 hover:bg-white/20 active:scale-95 text-xs font-bold text-white transition-all cursor-pointer backdrop-blur-xs">
+                    Edit
+                  </button>
+                </div>
+              </div>
+ 
+              {/* Data Lengkap Grid Right */}
+              <div className="md:col-span-7 flex flex-col justify-between space-y-4">
+                <div>
+                  <h4 className="text-xl font-bold text-neutral-900 font-body">Data Lengkap</h4>
+                  <div className="w-full h-px bg-neutral-200 mt-2" />
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Nama block */}
-                  <div className="p-4 rounded-2xl bg-[#A1C942] text-white">
-                    <div className="text-xs font-semibold opacity-75">| Nama</div>
-                    <div className="text-base font-bold mt-1 truncate">{session.profile.full_name}</div>
+                  <div className="p-5 rounded-2xl bg-[#A1C942] text-white flex justify-between items-start shadow-sm hover:shadow-md transition-shadow">
+                    <div className="space-y-1">
+                      <div className="text-[11px] font-bold opacity-90">| Nama</div>
+                      <div className="text-sm sm:text-base font-normal leading-snug">{session.profile.full_name}</div>
+                    </div>
+                    <Tag className="w-4 h-4 opacity-90 shrink-0" />
                   </div>
-
+ 
                   {/* Email block */}
-                  <div className="p-4 rounded-2xl bg-[#5E8000] text-white">
-                    <div className="text-xs font-semibold opacity-75">| Email</div>
-                    <div className="text-base font-bold mt-1 truncate">{session.profile.email}</div>
+                  <div className="p-5 rounded-2xl bg-[#5E8000] text-white flex justify-between items-start shadow-sm hover:shadow-md transition-shadow">
+                    <div className="space-y-1 min-w-0">
+                      <div className="text-[11px] font-bold opacity-90">| Email</div>
+                      <div className="text-sm sm:text-base font-normal leading-snug truncate">{session.profile.email}</div>
+                    </div>
+                    <Mail className="w-4 h-4 opacity-90 shrink-0" />
                   </div>
-
+ 
                   {/* Nomor block */}
-                  <div className="p-4 rounded-2xl bg-[#5E8000] text-white">
-                    <div className="text-xs font-semibold opacity-75">| Nomor</div>
-                    <div className="text-base font-bold mt-1 truncate">{session.profile.whatsapp_number || "-"}</div>
+                  <div className="p-5 rounded-2xl bg-[#5E8000] text-white flex justify-between items-start shadow-sm hover:shadow-md transition-shadow">
+                    <div className="space-y-1">
+                      <div className="text-[11px] font-bold opacity-90">| Nomor</div>
+                      <div className="text-sm sm:text-base font-normal leading-snug">{session.profile.whatsapp_number || "-"}</div>
+                    </div>
+                    <Phone className="w-4 h-4 opacity-90 shrink-0" />
                   </div>
-
+ 
                   {/* Status block */}
-                  <div className="p-4 rounded-2xl bg-[#A1C942] text-white">
-                    <div className="text-xs font-semibold opacity-75">| Status</div>
-                    <div className="text-base font-bold mt-1 truncate capitalize">{session.profile.role}</div>
+                  <div className="p-5 rounded-2xl bg-[#A1C942] text-white flex justify-between items-start shadow-sm hover:shadow-md transition-shadow">
+                    <div className="space-y-1">
+                      <div className="text-[11px] font-bold opacity-90">| Status</div>
+                      <div className="text-sm sm:text-base font-normal leading-snug capitalize">{session.profile.role}</div>
+                    </div>
+                    <ShieldCheck className="w-4 h-4 opacity-90 shrink-0" />
                   </div>
                 </div>
               </div>
             </div>
-
+ 
             {/* Bottom Weather Landscape Banner */}
-            <div className="relative rounded-3xl overflow-hidden h-64 shadow-md bg-neutral-900 flex items-end">
+            <div className="relative rounded-[32px] overflow-hidden h-64 shadow-md bg-neutral-900 flex items-center">
               {/* Landscape Background Image */}
               <img
                 src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80"
                 alt="Agriculture"
-                className="absolute inset-0 w-full h-full object-cover opacity-60 pointer-events-none"
+                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
-
+              <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/25 to-transparent" />
+ 
               {/* Weather Content Overlay */}
-              <div className="relative z-10 p-6 sm:p-8 w-full text-white flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-                <div className="space-y-2">
-                  {/* Time display */}
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-[#A1C942]" />
-                    <span className="text-4xl font-extrabold tracking-tight font-display">{time}</span>
-                  </div>
-                  {/* Location display */}
-                  <div className="flex items-center gap-1.5 text-sm font-semibold opacity-90">
-                    <MapPin className="w-4 h-4 text-[#FFC000]" />
-                    <span>{weather.location}</span>
-                  </div>
+              <div className="relative z-10 p-8 sm:p-10 text-white space-y-2 flex flex-col justify-center h-full">
+                {/* Time display */}
+                <div className="text-6xl font-light font-body tracking-tight leading-none">
+                  {time}
                 </div>
-
-                <div className="flex items-end gap-3.5">
-                  {/* Temp display */}
-                  <div className="flex items-start">
-                    <span className="text-6xl font-black font-display leading-none">{weather.temperature}</span>
-                    <span className="text-2xl font-bold">°C</span>
+                
+                {/* Temperature & Location */}
+                <div className="space-y-0.5">
+                  <div className="text-2xl font-bold font-body">
+                    {weather.temperature}°
                   </div>
-                  
-                  {/* Weather Status */}
-                  <div className="border-l border-white/20 pl-3.5 py-1">
-                    <div className="text-xs font-semibold uppercase tracking-wider text-[#A1C942] flex items-center gap-1">
-                      <Thermometer className="w-3.5 h-3.5" /> Suhu Real-Time
-                    </div>
-                    <div className="text-sm font-bold opacity-90 mt-0.5">{weather.description}</div>
+                  <div className="text-sm font-semibold tracking-wide opacity-90">
+                    {weather.location}
                   </div>
                 </div>
               </div>
@@ -782,7 +841,7 @@ export default function Dashboard() {
             {/* Header Title with Button */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-neutral-200 pb-4">
               <div>
-                <h1 className="text-2xl font-extrabold font-display">Kebutuhan Pasar & Pangan</h1>
+                <h1 className="text-2xl font-extrabold font-body">Kebutuhan Pasar & Pangan</h1>
                 <p className="text-xs text-neutral-400 mt-1">Daftar permintaan suplai pangan dari konsumen Agrivo</p>
               </div>
 
@@ -972,7 +1031,7 @@ export default function Dashboard() {
         {activeTab === "petani" && (
           <div className="space-y-6 animate-fade-in">
             <div className="border-b border-neutral-200 pb-4">
-              <h1 className="text-2xl font-extrabold font-display">Penawaran Saya</h1>
+              <h1 className="text-2xl font-extrabold font-body">Penawaran Saya</h1>
               <p className="text-xs text-neutral-400 mt-1">Pantau status semua penawaran yang telah Anda ajukan ke konsumen</p>
             </div>
 
@@ -1089,7 +1148,7 @@ export default function Dashboard() {
         {activeTab === "transaksi" && (
           <div className="space-y-6 animate-fade-in">
             <div className="border-b border-neutral-200 pb-4">
-              <h1 className="text-2xl font-extrabold font-display">Kesepakatan & Transaksi</h1>
+              <h1 className="text-2xl font-extrabold font-body">Kesepakatan & Transaksi</h1>
               <p className="text-xs text-neutral-400 mt-1">Daftar transaksi aktif berdasarkan offer yang telah diterima</p>
             </div>
 
@@ -1206,18 +1265,27 @@ export default function Dashboard() {
                           </>
                         )}
 
-                        {tx.status === "completed" && (
-                          <button
-                            onClick={() => {
-                              setSelectedTxForReview(tx);
-                              setReviewPayload({ rating: 5, comment: "" });
-                            }}
-                            className="w-full flex items-center justify-center gap-1 py-2 rounded-xl border border-neutral-200 text-neutral-600 font-bold text-xs hover:bg-neutral-50 active:scale-95 transition-all cursor-pointer"
-                          >
-                            <Star className="w-3.5 h-3.5 text-[#FFC000]" />
-                            <span>Beri Ulasan</span>
-                          </button>
-                        )}
+                        {tx.status === "completed" && (() => {
+                          const userId = session.profile.id;
+                          const alreadyReviewed = tx.reviews?.some(r => r.reviewer_id === userId);
+                          return alreadyReviewed ? (
+                            <div className="w-full flex items-center justify-center gap-1 py-2 rounded-xl border border-neutral-100 bg-neutral-50 text-neutral-400 font-bold text-xs cursor-not-allowed select-none">
+                              <Star className="w-3.5 h-3.5 text-[#FFC000]/50" />
+                              <span>Ulasan Diberikan</span>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setSelectedTxForReview(tx);
+                                setReviewPayload({ rating: 5, comment: "" });
+                              }}
+                              className="w-full flex items-center justify-center gap-1 py-2 rounded-xl border border-neutral-200 text-neutral-600 font-bold text-xs hover:bg-neutral-50 active:scale-95 transition-all cursor-pointer"
+                            >
+                              <Star className="w-3.5 h-3.5 text-[#FFC000]" />
+                              <span>Beri Ulasan</span>
+                            </button>
+                          );
+                        })()}
 
                         {partner?.whatsapp_number && (
                           <button
@@ -1244,7 +1312,7 @@ export default function Dashboard() {
             {/* Header Title */}
             <div className="border-b border-neutral-200 pb-4 flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-extrabold font-display">Asisten Lahan Pintar (AI)</h1>
+                <h1 className="text-2xl font-extrabold font-body">Asisten Lahan Pintar (AI)</h1>
                 <p className="text-xs text-neutral-400 mt-1">Dapatkan rekomendasi otomatisasi IoT dan analisis digital twin Lahan Anda</p>
               </div>
 

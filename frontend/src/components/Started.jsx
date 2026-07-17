@@ -1,10 +1,14 @@
+import { useNavigate } from "react-router-dom";
 import { Sparkles, Search } from "lucide-react";
 
 export default function Started() {
+  const navigate = useNavigate();
+
   return (
     <div id="buat-konsumen" className="flex flex-wrap items-center gap-5 py-12 justify-center">
       <button
         type="button"
+        onClick={() => navigate("/register")}
         className="group cursor-pointer relative overflow-hidden rounded-2xl px-8 py-4
           bg-gradient-to-r from-[#FFC000] via-yellow-500 to-[#A1C964]
           shadow-[0_8px_24px_-6px_rgba(202,165,0,0.55)]
@@ -28,6 +32,7 @@ export default function Started() {
 
       <button
         type="button"
+        onClick={() => navigate("/register")}
         className="group relative cursor-pointer overflow-hidden rounded-2xl px-8 py-4
           bg-white border-2 border-yellow-400/70
           shadow-[0_4px_14px_-4px_rgba(202,165,0,0.25)]

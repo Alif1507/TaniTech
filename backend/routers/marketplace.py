@@ -537,7 +537,7 @@ def get_my_transactions(current_user: Dict[str, Any] = Depends(get_current_user)
     user_id = current_user["id"]
     role = current_user["role"]
     
-    query = admin_client.table("transactions").select("*, food_posts:post_id(title, unit), consumer:consumer_id(full_name, phone, whatsapp_number), farmer:farmer_id(full_name, phone, whatsapp_number)")
+    query = admin_client.table("transactions").select("*, food_posts:post_id(title, unit), consumer:consumer_id(full_name, phone, whatsapp_number), farmer:farmer_id(full_name, phone, whatsapp_number), reviews(id, reviewer_id)")
     
     if role == "konsumen":
         query = query.eq("consumer_id", user_id)

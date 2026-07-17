@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { getSession } from "../utils/api";
 
@@ -47,7 +47,7 @@ export default function Navbar() {
           <img
             src="/img/Logo.png"
             alt="Benih - Rumah Bibit Berkualitas"
-            className="h-20 w-auto"
+            className="h-10 w-auto"
           />
         </Link>
 

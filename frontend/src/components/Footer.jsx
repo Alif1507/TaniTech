@@ -1,14 +1,10 @@
-import "@fontsource/poppins/400.css";
-import "@fontsource/poppins/500.css";
-import "@fontsource/poppins/600.css";
-import "@fontsource/poppins/700.css";
 
 export default function Footer() {
   return (
     <footer  style={{ fontFamily: "Poppins, sans-serif" }} className="w-full mt-15 bg-gradient-to-r from-[#FFC000] via-[#D4AF37] to-[#A1C942] px-8 md:px-14 pt-5 pb-6">
       <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 ">
         <div className="flex flex-col gap-6 items-start">
-          <img src="/img/Logo.png" alt="Benih" className="h-30 w-auto object-contain" />
+          <img src="/img/Logo.png" alt="Benih" className="h-20 w-auto object-contain" />
 
           <nav className="flex flex-wrap items-center gap-6 text-sm font-medium text-[#3F3300]">
             <a href="#about" className="hover:text-[#5E8000] transition-colors">
