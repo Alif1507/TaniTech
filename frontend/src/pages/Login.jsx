@@ -32,8 +32,9 @@ export default function Login() {
 
         {/* Brand */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-block">
-            <span className="font-display font-black text-3xl text-[#5E8000]">
+          <Link to="/" className="inline-flex flex-col items-center gap-2">
+            <img src="/img/Logo.png" alt="Agrivo" className="h-14 w-auto" />
+            <span className="font-display font-black text-2xl text-[#5E8000]">
               AGRI<span className="text-[#A1C942]">VO</span>
             </span>
           </Link>

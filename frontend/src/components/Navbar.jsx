@@ -77,15 +77,6 @@ export default function Navbar() {
                   <div className="text-sm font-bold text-neutral-800 leading-tight">{session.profile.full_name}</div>
                 </div>
               </Link>
-              
-              {/* Logout Button */}
-              <button
-                onClick={handleLogout}
-                className="flex items-center justify-center gap-1.5 rounded-full border border-neutral-200 px-5 py-2.5 text-[14px] font-bold text-neutral-600 hover:bg-neutral-50 hover:text-red-600 transition-all cursor-pointer"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Keluar</span>
-              </button>
             </div>
           ) : (
             <>
